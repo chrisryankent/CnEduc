@@ -5,9 +5,15 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Admin - CnEduc</title>
-  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/style.css" type="text/css">
+  <style>
+    * { box-sizing: border-box; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; }
+    html { scroll-behavior: smooth; -ms-overflow-style: scrollbar; }
+    body { margin: 0; padding: 0; }
+  </style>
 </head>
 <body>
   <!-- Admin Top Bar -->
