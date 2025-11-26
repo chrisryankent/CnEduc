@@ -1,0 +1,90 @@
+<?php
+require_once __DIR__ . '/_auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+if (!isset($_GET['id'])) {
+    header('Location: units_list.php');
+    exit;
+}
+
+$unit_id = (int)$_GET['id'];
+$unit = get_unit($unit_id);
+if (!$unit) {
+    die('Unit not found');
+}
+
+$courses = get_courses();
+
+if (isset($_POST['title'])) {
+    if (!verify_csrf_token($_POST['csrf_token'])) {
+        $error = 'CSRF token validation failed';
+    } else {
+        $course_id = (int)$_POST['course_id'];
+        $code = $_POST['code'];
+        $title = $_POST['title'];
+        $content = $_POST['content'];
+        $position = (int)$_POST['position'];
+        
+        // Validate inputs
+        $error = validate_unit_code($code);
+        if (!$error) {
+            $error = validate_unit_title($title);
+        }
+        if (!$error) {
+            $error = validate_topic_content($content);
+        }
+        if (!$error && $course_id <= 0) {
+            $error = 'Error: Please select a valid course.';
+        }
+        
+        if (!$error) {
+            if (update_unit($unit_id, $course_id, $code, $title, $content, $position)) {
+                header('Location: units_list.php?course_id=' . $course_id);
+                exit;
+            } else {
+                $error = 'Failed to update unit. Please try again.';
+            }
+        }
+    }
+}
+
+include __DIR__ . '/header.php';
+?>
+<div class="card">
+  <h1>Edit Unit</h1>
+  <?php if (!empty($error)): ?><p style="color:red"><?php echo htmlspecialchars($error); ?></p><?php endif; ?>
+  
+  <form method="post">
+    <div>
+      <label>Course<br>
+        <select name="course_id" required>
+          <option value="">-- Select Course --</option>
+          <?php foreach ($courses as $c): ?>
+            <option value="<?php echo $c['id']; ?>" <?php echo $c['id'] === $unit['course_id'] ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($c['name']); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label>Unit Code<br><input type="text" name="code" value="<?php echo htmlspecialchars($unit['code']); ?>" style="width:100%;"></label>
+    </div>
+    <div>
+      <label>Title<br><input type="text" name="title" value="<?php echo htmlspecialchars($unit['title']); ?>" required style="width:100%;"></label>
+    </div>
+    <div>
+      <label>Content<br><textarea name="content" style="width:100%; height:300px;"><?php echo htmlspecialchars($unit['content']); ?></textarea></label>
+    </div>
+    <div>
+      <label>Position<br><input type="number" name="position" value="<?php echo $unit['position']; ?>"></label>
+    </div>
+    <div>
+      <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+      <input type="submit" value="Update Unit">
+      <a href="units_list.php">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<?php include __DIR__ . '/footer.php'; ?>
