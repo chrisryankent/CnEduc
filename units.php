@@ -1,3 +1,20 @@
+<?php
+require_once __DIR__ . '/includes/functions.php';
+if (!isset($_GET['course_id'])) {
+    header('Location: courses.php');
+    exit;
+}
+$course_id = (int)$_GET['course_id'];
+$course = get_course($course_id);
+if (!$course) {
+    echo 'Course not found';
+    exit;
+}
+$units = get_units_by_course($course_id);
+if (!$units) {
+    $units = [];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
