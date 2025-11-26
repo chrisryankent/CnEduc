@@ -61,6 +61,19 @@ CREATE TABLE IF NOT EXISTS `units` (
   FOREIGN KEY (`course_id`) REFERENCES `courses`(`id`) ON DELETE CASCADE
 );
 
+-- User accounts for student login
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `email` VARCHAR(100) NOT NULL UNIQUE,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `first_name` VARCHAR(100),
+  `last_name` VARCHAR(100),
+  `is_active` BOOLEAN DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX (`email`)
+);
+
 -- Admin users for secure login
 CREATE TABLE IF NOT EXISTS `admin_users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -68,6 +81,133 @@ CREATE TABLE IF NOT EXISTS `admin_users` (
   `password_hash` VARCHAR(255) NOT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Video tutorials attached to topics
+CREATE TABLE IF NOT EXISTS `topic_videos` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `topic_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `video_url` VARCHAR(500) NOT NULL,
+  `video_provider` ENUM('youtube', 'vimeo', 'local') DEFAULT 'youtube',
+  `duration_seconds` INT,
+  `position` INT DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`topic_id`) REFERENCES `topics`(`id`) ON DELETE CASCADE
+);
+
+-- PDF resources attached to topics
+CREATE TABLE IF NOT EXISTS `topic_resources` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `topic_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `file_path` VARCHAR(500) NOT NULL,
+  `file_size` INT,
+  `file_type` VARCHAR(20),
+  `position` INT DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`topic_id`) REFERENCES `topics`(`id`) ON DELETE CASCADE
+);
+
+-- Unit resources (videos and PDFs for university units)
+CREATE TABLE IF NOT EXISTS `unit_videos` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `unit_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `video_url` VARCHAR(500) NOT NULL,
+  `video_provider` ENUM('youtube', 'vimeo', 'local') DEFAULT 'youtube',
+  `duration_seconds` INT,
+  `position` INT DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS `unit_resources` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `unit_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `file_path` VARCHAR(500) NOT NULL,
+  `file_size` INT,
+  `file_type` VARCHAR(20),
+  `position` INT DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE
+);
+
+-- User progress tracking for classes/subjects
+CREATE TABLE IF NOT EXISTS `user_progress_subjects` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `class_id` INT NOT NULL,
+  `subject_id` INT NOT NULL,
+  `current_topic_id` INT,
+  `topics_completed` INT DEFAULT 0,
+  `total_topics` INT DEFAULT 0,
+  `progress_percentage` INT DEFAULT 0,
+  `last_accessed` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `started_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`subject_id`) REFERENCES `subjects`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`current_topic_id`) REFERENCES `topics`(`id`) ON DELETE SET NULL,
+  UNIQUE KEY `user_subject` (`user_id`, `subject_id`)
+);
+
+-- User progress tracking for university courses/units
+CREATE TABLE IF NOT EXISTS `user_progress_courses` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `course_id` INT NOT NULL,
+  `current_unit_id` INT,
+  `units_completed` INT DEFAULT 0,
+  `total_units` INT DEFAULT 0,
+  `progress_percentage` INT DEFAULT 0,
+  `last_accessed` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `started_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`course_id`) REFERENCES `courses`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`current_unit_id`) REFERENCES `units`(`id`) ON DELETE SET NULL,
+  UNIQUE KEY `user_course` (`user_id`, `course_id`)
+);
+
+-- Track completed topics per user
+CREATE TABLE IF NOT EXISTS `user_topic_completion` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `topic_id` INT NOT NULL,
+  `completed_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`topic_id`) REFERENCES `topics`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `user_topic` (`user_id`, `topic_id`)
+);
+
+-- Track completed units per user
+CREATE TABLE IF NOT EXISTS `user_unit_completion` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `unit_id` INT NOT NULL,
+  `completed_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `user_unit` (`user_id`, `unit_id`)
+);
+
+-- User learning sessions (track time spent)
+CREATE TABLE IF NOT EXISTS `user_learning_sessions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `topic_id` INT,
+  `unit_id` INT,
+  `started_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `ended_at` TIMESTAMP NULL,
+  `duration_seconds` INT,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`topic_id`) REFERENCES `topics`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE SET NULL
 );
 
 -- Sample seed data
@@ -153,5 +293,43 @@ INSERT INTO `units` (`course_id`, `code`, `title`, `content`, `position`) VALUES
 -- Password hash generated by password_hash('password', PASSWORD_BCRYPT)
 INSERT INTO `admin_users` (`username`, `password_hash`) VALUES
 ('admin', '$2y$10$Y0M/QdFr7b5HCCIwKVvKFebLRDNWl8dO/h/Gk/MG8hMdQhLQYLFfq');
+
+-- Sample student users
+INSERT INTO `users` (`email`, `password_hash`, `first_name`, `last_name`) VALUES
+('student1@example.com', '$2y$10$Y0M/QdFr7b5HCCIwKVvKFebLRDNWl8dO/h/Gk/MG8hMdQhLQYLFfq', 'John', 'Doe'),
+('student2@example.com', '$2y$10$Y0M/QdFr7b5HCCIwKVvKFebLRDNWl8dO/h/Gk/MG8hMdQhLQYLFfq', 'Jane', 'Smith');
+
+-- Sample topic videos for P1 Mathematics
+INSERT INTO `topic_videos` (`topic_id`, `title`, `description`, `video_url`, `video_provider`, `duration_seconds`, `position`) VALUES
+((SELECT id FROM topics WHERE title='Numbers 1-10' AND subject_id=(SELECT id FROM subjects WHERE class_id=(SELECT id FROM classes WHERE name='P1') AND name='Mathematics')), 'Counting 1 to 10', 'Learn to count numbers from 1 to 10 with visual aids', 'dQw4w9WgXcQ', 'youtube', 300, 1),
+((SELECT id FROM topics WHERE title='Addition Basics' AND subject_id=(SELECT id FROM subjects WHERE class_id=(SELECT id FROM classes WHERE name='P1') AND name='Mathematics')), 'Simple Addition', 'Introduction to adding small numbers', 'jNQXAC9IVRw', 'youtube', 420, 1);
+
+-- Sample topic resources (PDFs) for P1 Mathematics
+INSERT INTO `topic_resources` (`topic_id`, `title`, `description`, `file_path`, `file_size`, `file_type`, `position`) VALUES
+((SELECT id FROM topics WHERE title='Numbers 1-10' AND subject_id=(SELECT id FROM subjects WHERE class_id=(SELECT id FROM classes WHERE name='P1') AND name='Mathematics')), 'Numbers Worksheet', 'Practice sheet for numbers 1-10', '/uploads/resources/p1_math_numbers.pdf', 1024000, 'pdf', 1),
+((SELECT id FROM topics WHERE title='Addition Basics' AND subject_id=(SELECT id FROM subjects WHERE class_id=(SELECT id FROM classes WHERE name='P1') AND name='Mathematics')), 'Addition Practice', 'Worksheet with addition problems', '/uploads/resources/p1_math_addition.pdf', 1024000, 'pdf', 1);
+
+-- Sample unit videos for university courses
+INSERT INTO `unit_videos` (`unit_id`, `title`, `description`, `video_url`, `video_provider`, `duration_seconds`, `position`) VALUES
+((SELECT id FROM units WHERE code='CS101'), 'Programming Basics', 'Introduction to programming concepts and variables', 'PrAw-gHWnSM', 'youtube', 900, 1),
+((SELECT id FROM units WHERE code='CS102'), 'Arrays Explained', 'Understanding arrays and their operations', 'TSC9mS16R7w', 'youtube', 1200, 1);
+
+-- Sample unit resources (PDFs)
+INSERT INTO `unit_resources` (`unit_id`, `title`, `description`, `file_path`, `file_size`, `file_type`, `position`) VALUES
+((SELECT id FROM units WHERE code='CS101'), 'Programming Guide', 'Complete guide to programming basics', '/uploads/resources/cs101_guide.pdf', 2048000, 'pdf', 1),
+((SELECT id FROM units WHERE code='CS102'), 'Data Structures Reference', 'Reference manual for data structures', '/uploads/resources/cs102_reference.pdf', 3048000, 'pdf', 1);
+
+-- Sample user progress for subjects
+INSERT INTO `user_progress_subjects` (`user_id`, `class_id`, `subject_id`, `current_topic_id`, `topics_completed`, `total_topics`, `progress_percentage`) VALUES
+((SELECT id FROM users WHERE email='student1@example.com'), (SELECT id FROM classes WHERE name='P1'), (SELECT id FROM subjects WHERE class_id=(SELECT id FROM classes WHERE name='P1') AND name='Mathematics'), (SELECT id FROM topics WHERE title='Numbers 1-10' LIMIT 1), 1, 3, 33),
+((SELECT id FROM users WHERE email='student1@example.com'), (SELECT id FROM classes WHERE name='P1'), (SELECT id FROM subjects WHERE class_id=(SELECT id FROM classes WHERE name='P1') AND name='English'), (SELECT id FROM topics WHERE title='Letter Recognition' LIMIT 1), 0, 3, 0);
+
+-- Sample user progress for courses
+INSERT INTO `user_progress_courses` (`user_id`, `course_id`, `current_unit_id`, `units_completed`, `total_units`, `progress_percentage`) VALUES
+((SELECT id FROM users WHERE email='student2@example.com'), (SELECT id FROM courses WHERE name='BSc Computer Science'), (SELECT id FROM units WHERE code='CS101'), 0, 2, 0);
+
+-- Sample completed topics
+INSERT INTO `user_topic_completion` (`user_id`, `topic_id`) VALUES
+((SELECT id FROM users WHERE email='student1@example.com'), (SELECT id FROM topics WHERE title='Numbers 1-10' LIMIT 1));
 
 -- End of file
