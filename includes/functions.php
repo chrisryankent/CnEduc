@@ -188,6 +188,36 @@ function delete_unit($id) {
     return $mysqli->query("DELETE FROM units WHERE id = $id");
 }
 
+// Topic videos and resources
+function get_topic_videos($topic_id) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $res = $mysqli->query("SELECT * FROM topic_videos WHERE topic_id = $topic_id ORDER BY position, id");
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+function get_topic_resources($topic_id) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $res = $mysqli->query("SELECT * FROM topic_resources WHERE topic_id = $topic_id ORDER BY position, id");
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+// Unit videos and resources
+function get_unit_videos($unit_id) {
+    global $mysqli;
+    $unit_id = (int)$unit_id;
+    $res = $mysqli->query("SELECT * FROM unit_videos WHERE unit_id = $unit_id ORDER BY position, id");
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+function get_unit_resources($unit_id) {
+    global $mysqli;
+    $unit_id = (int)$unit_id;
+    $res = $mysqli->query("SELECT * FROM unit_resources WHERE unit_id = $unit_id ORDER BY position, id");
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+
 // Validation functions
 function validate_string($str, $min_len = 1, $max_len = 255, $field_name = 'Field') {
     $str = trim($str);
