@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Admin - CnEduc</title>
-  <link rel="stylesheet" href="../assets/style.css" type="text/css">
+  <link rel="stylesheet" href="../assets/admin.css" type="text/css">
   <style>
     * { box-sizing: border-box; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; }
     html { scroll-behavior: smooth; -ms-overflow-style: scrollbar; }
