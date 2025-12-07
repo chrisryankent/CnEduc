@@ -218,6 +218,59 @@ function get_unit_resources($unit_id) {
     return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 }
 
+// Add video/resource insert helpers
+function add_unit_video($unit_id, $title, $description, $video_url, $video_provider = 'youtube', $duration_seconds = null, $position = 0) {
+    global $mysqli;
+    $unit_id = (int)$unit_id;
+    $title = $mysqli->real_escape_string($title);
+    $description = $mysqli->real_escape_string($description);
+    $video_url = $mysqli->real_escape_string($video_url);
+    $video_provider = $mysqli->real_escape_string($video_provider);
+    $duration_seconds = $duration_seconds === null ? 'NULL' : (int)$duration_seconds;
+    $position = (int)$position;
+    $sql = "INSERT INTO unit_videos (unit_id, title, description, video_url, video_provider, duration_seconds, position) VALUES ($unit_id, '$title', '$description', '$video_url', '$video_provider', $duration_seconds, $position)";
+    return $mysqli->query($sql);
+}
+
+function add_topic_video($topic_id, $title, $description, $video_url, $video_provider = 'youtube', $duration_seconds = null, $position = 0) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $title = $mysqli->real_escape_string($title);
+    $description = $mysqli->real_escape_string($description);
+    $video_url = $mysqli->real_escape_string($video_url);
+    $video_provider = $mysqli->real_escape_string($video_provider);
+    $duration_seconds = $duration_seconds === null ? 'NULL' : (int)$duration_seconds;
+    $position = (int)$position;
+    $sql = "INSERT INTO topic_videos (topic_id, title, description, video_url, video_provider, duration_seconds, position) VALUES ($topic_id, '$title', '$description', '$video_url', '$video_provider', $duration_seconds, $position)";
+    return $mysqli->query($sql);
+}
+
+function add_unit_resource($unit_id, $title, $description, $file_path, $file_size = 0, $file_type = 'file', $position = 0) {
+    global $mysqli;
+    $unit_id = (int)$unit_id;
+    $title = $mysqli->real_escape_string($title);
+    $description = $mysqli->real_escape_string($description);
+    $file_path = $mysqli->real_escape_string($file_path);
+    $file_size = (int)$file_size;
+    $file_type = $mysqli->real_escape_string($file_type);
+    $position = (int)$position;
+    $sql = "INSERT INTO unit_resources (unit_id, title, description, file_path, file_size, file_type, position) VALUES ($unit_id, '$title', '$description', '$file_path', $file_size, '$file_type', $position)";
+    return $mysqli->query($sql);
+}
+
+function add_topic_resource($topic_id, $title, $description, $file_path, $file_size = 0, $file_type = 'file', $position = 0) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $title = $mysqli->real_escape_string($title);
+    $description = $mysqli->real_escape_string($description);
+    $file_path = $mysqli->real_escape_string($file_path);
+    $file_size = (int)$file_size;
+    $file_type = $mysqli->real_escape_string($file_type);
+    $position = (int)$position;
+    $sql = "INSERT INTO topic_resources (topic_id, title, description, file_path, file_size, file_type, position) VALUES ($topic_id, '$title', '$description', '$file_path', $file_size, '$file_type', $position)";
+    return $mysqli->query($sql);
+}
+
 // Validation functions
 function validate_string($str, $min_len = 1, $max_len = 255, $field_name = 'Field') {
     $str = trim($str);
@@ -259,5 +312,72 @@ function validate_unit_code($code) {
 
 function validate_unit_title($title) {
     return validate_string($title, 3, 255, 'Unit title');
+}
+
+// Get related topics in the same subject (for "See Also" sections)
+function get_related_topics($topic_id, $subject_id, $limit = 5) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $subject_id = (int)$subject_id;
+    $limit = (int)$limit;
+    $res = $mysqli->query("SELECT * FROM topics WHERE subject_id = $subject_id AND id != $topic_id ORDER BY position, id LIMIT $limit");
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+// Q&A Helper Functions
+function add_topic_question($topic_id, $user_name, $user_email, $question_title, $question_text) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $user_name = $mysqli->real_escape_string($user_name);
+    $user_email = $mysqli->real_escape_string($user_email);
+    $question_title = $mysqli->real_escape_string($question_title);
+    $question_text = $mysqli->real_escape_string($question_text);
+    $sql = "INSERT INTO topic_questions (topic_id, user_name, user_email, question_title, question_text) 
+            VALUES ($topic_id, '$user_name', '$user_email', '$question_title', '$question_text')";
+    return $mysqli->query($sql);
+}
+
+function get_topic_questions($topic_id, $limit = 10, $offset = 0) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $limit = (int)$limit;
+    $offset = (int)$offset;
+    $res = $mysqli->query("SELECT * FROM topic_questions WHERE topic_id = $topic_id AND is_approved = 1 
+                           ORDER BY created_at DESC LIMIT $offset, $limit");
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+function get_topic_question($question_id) {
+    global $mysqli;
+    $question_id = (int)$question_id;
+    $res = $mysqli->query("SELECT * FROM topic_questions WHERE id = $question_id");
+    return $res ? $res->fetch_assoc() : null;
+}
+
+function add_question_answer($question_id, $user_name, $user_email, $answer_text) {
+    global $mysqli;
+    $question_id = (int)$question_id;
+    $user_name = $mysqli->real_escape_string($user_name);
+    $user_email = $mysqli->real_escape_string($user_email);
+    $answer_text = $mysqli->real_escape_string($answer_text);
+    $sql = "INSERT INTO topic_question_answers (question_id, user_name, user_email, answer_text) 
+            VALUES ($question_id, '$user_name', '$user_email', '$answer_text')";
+    return $mysqli->query($sql);
+}
+
+function get_question_answers($question_id) {
+    global $mysqli;
+    $question_id = (int)$question_id;
+    $res = $mysqli->query("SELECT * FROM topic_question_answers WHERE question_id = $question_id AND is_approved = 1 
+                           ORDER BY created_at ASC");
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+function count_topic_questions($topic_id) {
+    global $mysqli;
+    $topic_id = (int)$topic_id;
+    $res = $mysqli->query("SELECT COUNT(*) as cnt FROM topic_questions WHERE topic_id = $topic_id AND is_approved = 1");
+    $row = $res ? $res->fetch_assoc() : null;
+    return $row ? (int)$row['cnt'] : 0;
 }
 

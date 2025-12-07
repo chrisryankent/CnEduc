@@ -575,8 +575,8 @@ include __DIR__ . '/includes/header.php';
             </a>
             <div class="nav-links">
                 <a href="index.php"><i class="fas fa-home"></i> Home</a>
-                <a href="#" class="active"><i class="fas fa-book"></i> Curriculum</a>
-                <a href="#"><i class="fas fa-university"></i> University</a>
+                <a href="curriculum.php" class="active"><i class="fas fa-book"></i> Curriculum</a>
+                <a href="university.php"><i class="fas fa-university"></i> University</a>
                 <a href="explore.php"><i class="fas fa-search"></i> Explore</a>
                 <a href="#"><i class="fas fa-user"></i> Account</a>
             </div>

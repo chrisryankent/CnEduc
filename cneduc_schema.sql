@@ -332,4 +332,33 @@ INSERT INTO `user_progress_courses` (`user_id`, `course_id`, `current_unit_id`, 
 INSERT INTO `user_topic_completion` (`user_id`, `topic_id`) VALUES
 ((SELECT id FROM users WHERE email='student1@example.com'), (SELECT id FROM topics WHERE title='Numbers 1-10' LIMIT 1));
 
+-- Questions and Answers for topics
+CREATE TABLE IF NOT EXISTS `topic_questions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `topic_id` INT NOT NULL,
+  `user_name` VARCHAR(100),
+  `user_email` VARCHAR(255),
+  `question_title` VARCHAR(255) NOT NULL,
+  `question_text` TEXT NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_approved` TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (`topic_id`) REFERENCES `topics`(`id`) ON DELETE CASCADE,
+  INDEX `idx_topic_created` (`topic_id`, `created_at` DESC)
+);
+
+CREATE TABLE IF NOT EXISTS `topic_question_answers` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `question_id` INT NOT NULL,
+  `user_name` VARCHAR(100),
+  `user_email` VARCHAR(255),
+  `answer_text` TEXT NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_approved` TINYINT(1) DEFAULT 1,
+  `helpful_count` INT DEFAULT 0,
+  FOREIGN KEY (`question_id`) REFERENCES `topic_questions`(`id`) ON DELETE CASCADE,
+  INDEX `idx_question_created` (`question_id`, `created_at` DESC)
+);
+
 -- End of file

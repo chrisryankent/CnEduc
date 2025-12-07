@@ -47,6 +47,11 @@
         <h3 class="admin-sidebar-title">University</h3>
         <a href="courses_list.php" class="admin-sidebar-link">🎯 Courses</a>
         <a href="units_list.php" class="admin-sidebar-link">📚 Units</a>
+        <a href="upload_video.php" class="admin-sidebar-link">🎬 Upload Videos</a>
+        <a href="upload_resource.php" class="admin-sidebar-link">📎 Upload Resources</a>
+        <a href="media_list.php" class="admin-sidebar-link">🗂️ Media Manager</a>
+        <a href="../university.php" class="admin-sidebar-link">🏫 University Front</a>
+        <a href="../curriculum.php" class="admin-sidebar-link">📘 Curriculum</a>
       </div>
 
       <!-- System -->
