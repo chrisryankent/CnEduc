@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/includes/functions.php';
 if (!isset($_GET['id'])) {
     header('Location: levels.php');
@@ -20,6 +21,21 @@ $resources = get_topic_resources($topic_id);
 
 // Get related topics
 $related_topics = get_related_topics($topic_id, $subject['id']);
+
+// Handle topic completion
+$is_logged_in = is_user_logged_in();
+$is_topic_complete = false;
+if ($is_logged_in) {
+    $current_user = cneduc_get_current_user();
+    $is_topic_complete = is_topic_complete($current_user['id'], $topic_id);
+    
+    if (isset($_POST['mark_complete'])) {
+        if (mark_topic_complete($current_user['id'], $topic_id)) {
+            check_and_award_achievements($current_user['id']);
+            $is_topic_complete = true;
+        }
+    }
+}
 
 // Handle question submission
 $qa_error = '';
@@ -1202,12 +1218,21 @@ include __DIR__ . '/includes/header.php';
                 <a href="curriculum.php"><i class="fas fa-book"></i> Curriculum</a>
                 <a href="university.php"><i class="fas fa-university"></i> University</a>
                 <a href="explore.php"><i class="fas fa-search"></i> Explore</a>
-                <a href="#"><i class="fas fa-user"></i> Account</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="dashboard.php"><i class="fas fa-user-circle"></i> Account</a>
+                <?php else: ?>
+                    <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <?php endif; ?>
             </div>
             <div class="nav-actions">
                 <a href="search.php" class="btn btn-primary btn-sm">
                     <i class="fas fa-search"></i> Search
                 </a>
+                <?php if ($is_logged_in): ?>
+                    <a href="logout.php" class="btn btn-sm" style="background: #ff6b6b; color: white; border: none;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </nav>
@@ -1237,59 +1262,70 @@ include __DIR__ . '/includes/header.php';
                 <?php if (!empty($videos)): ?>
                     <div class="card videos-section fade-in delay-1">
                         <h2><i class="fas fa-video"></i> Video Tutorials</h2>
-                        <p>Watch these video tutorials to better understand the concepts in this topic.</p>
-                        
-                        <div class="videos-grid">
-                            <?php foreach ($videos as $video): ?>
-                                <div class="video-card">
-                                    <div class="video-player">
-                                        <?php if ($video['video_provider'] === 'youtube'): ?>
-                                            <iframe 
-                                                src="https://www.youtube.com/embed/<?php echo htmlspecialchars($video['video_url']); ?>" 
-                                                frameborder="0" 
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowfullscreen>
-                                            </iframe>
-                                        <?php elseif ($video['video_provider'] === 'vimeo'): ?>
-                                            <iframe 
-                                                src="https://player.vimeo.com/video/<?php echo htmlspecialchars($video['video_url']); ?>" 
-                                                frameborder="0" 
-                                                allow="autoplay; fullscreen; picture-in-picture" 
-                                                allowfullscreen>
-                                            </iframe>
-                                        <?php else: ?>
-                                            <video controls>
-                                                <source src="<?php echo htmlspecialchars($video['video_url']); ?>" type="video/mp4">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="video-info">
-                                        <div class="video-title">
-                                            <i class="fas fa-play-circle"></i>
-                                            <?php echo htmlspecialchars($video['title']); ?>
+                        <?php if (!$is_logged_in): ?>
+                            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 16px;">
+                                <p style="margin: 0 0 12px 0; color: #856404;"><i class="fas fa-lock"></i> Videos are available to registered users only</p>
+                                <a href="login.php?redirect=<?php echo urlencode('read_topic.php?id=' . $topic_id); ?>" class="btn btn-primary" style="display: inline-block; padding: 8px 16px;">
+                                    <i class="fas fa-sign-in-alt"></i> Login to Watch
+                                </a>
+                                <a href="register.php" class="btn btn-secondary" style="display: inline-block; padding: 8px 16px; margin-left: 8px;">
+                                    <i class="fas fa-user-plus"></i> Register Free
+                                </a>
+                            </div>
+                        <?php else: ?>
+                            <p>Watch these video tutorials to better understand the concepts in this topic.</p>
+                            <div class="videos-grid">
+                                <?php foreach ($videos as $video): ?>
+                                    <div class="video-card">
+                                        <div class="video-player">
+                                            <?php if ($video['video_provider'] === 'youtube'): ?>
+                                                <iframe 
+                                                    src="https://www.youtube.com/embed/<?php echo htmlspecialchars($video['video_url']); ?>" 
+                                                    frameborder="0" 
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                    allowfullscreen>
+                                                </iframe>
+                                            <?php elseif ($video['video_provider'] === 'vimeo'): ?>
+                                                <iframe 
+                                                    src="https://player.vimeo.com/video/<?php echo htmlspecialchars($video['video_url']); ?>" 
+                                                    frameborder="0" 
+                                                    allow="autoplay; fullscreen; picture-in-picture" 
+                                                    allowfullscreen>
+                                                </iframe>
+                                            <?php else: ?>
+                                                <video controls>
+                                                    <source src="<?php echo htmlspecialchars($video['video_url']); ?>" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            <?php endif; ?>
                                         </div>
-                                        <?php if (!empty($video['description'])): ?>
-                                            <div class="video-description">
-                                                <?php echo htmlspecialchars($video['description']); ?>
+                                        <div class="video-info">
+                                            <div class="video-title">
+                                                <i class="fas fa-play-circle"></i>
+                                                <?php echo htmlspecialchars($video['title']); ?>
                                             </div>
-                                        <?php endif; ?>
-                                        <div class="video-meta">
-                                            <?php if (!empty($video['duration_seconds'])): ?>
-                                                <div class="video-duration">
-                                                    <i class="far fa-clock"></i>
-                                                    <?php echo floor($video['duration_seconds'] / 60); ?>:<?php echo str_pad($video['duration_seconds'] % 60, 2, '0', STR_PAD_LEFT); ?>
+                                            <?php if (!empty($video['description'])): ?>
+                                                <div class="video-description">
+                                                    <?php echo htmlspecialchars($video['description']); ?>
                                                 </div>
                                             <?php endif; ?>
-                                            <div class="video-views">
-                                                <i class="far fa-eye"></i>
-                                                <?php echo $video['views_count'] ?? '0'; ?> views
+                                            <div class="video-meta">
+                                                <?php if (!empty($video['duration_seconds'])): ?>
+                                                    <div class="video-duration">
+                                                        <i class="far fa-clock"></i>
+                                                        <?php echo floor($video['duration_seconds'] / 60); ?>:<?php echo str_pad($video['duration_seconds'] % 60, 2, '0', STR_PAD_LEFT); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="video-views">
+                                                    <i class="far fa-eye"></i>
+                                                    <?php echo $video['views_count'] ?? '0'; ?> views
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
@@ -1452,14 +1488,28 @@ include __DIR__ . '/includes/header.php';
                         <h3><i class="fas fa-chart-line"></i> Learning Progress</h3>
                         <div class="progress-section">
                             <div class="progress-circle">
-                                <span class="progress-text">75%</span>
+                                <span class="progress-text"><?php echo $is_topic_complete ? '100%' : '75%'; ?></span>
                             </div>
                             <div class="progress-label">Topic Completion</div>
                         </div>
                         <div style="text-align: center; margin-top: 16px;">
-                            <a href="#" class="btn btn-primary btn-sm" style="padding: 8px 16px;">
-                                <i class="fas fa-check"></i> Mark Complete
-                            </a>
+                            <?php if ($is_logged_in): ?>
+                                <?php if ($is_topic_complete): ?>
+                                    <div class="btn btn-success btn-sm" style="padding: 8px 16px; background: #4caf50; color: white;">
+                                        <i class="fas fa-check-circle"></i> Completed
+                                    </div>
+                                <?php else: ?>
+                                    <form method="post" style="display: inline;">
+                                        <button type="submit" name="mark_complete" class="btn btn-primary btn-sm" style="padding: 8px 16px;">
+                                            <i class="fas fa-check"></i> Mark Complete
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <a href="login.php?redirect=read_topic.php?id=<?php echo $topic_id; ?>" class="btn btn-primary btn-sm" style="padding: 8px 16px; text-decoration: none;">
+                                    <i class="fas fa-sign-in-alt"></i> Login to Track
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -1467,38 +1517,50 @@ include __DIR__ . '/includes/header.php';
                     <?php if (!empty($resources)): ?>
                         <div class="sidebar-card fade-in delay-1">
                             <h3><i class="fas fa-file-download"></i> Learning Resources</h3>
-                            <p style="font-size: 14px; color: var(--gray-600); margin-bottom: 16px;">Download these resources to enhance your learning.</p>
-                            
-                            <div class="resources-list">
-                                <?php foreach ($resources as $resource): ?>
-                                    <div class="resource-item">
-                                        <div class="resource-header">
-                                            <div class="resource-title">
-                                                <i class="fas fa-file-pdf"></i>
-                                                <?php echo htmlspecialchars($resource['title']); ?>
+                            <?php if (!$is_logged_in): ?>
+                                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; text-align: center;">
+                                    <p style="margin: 0 0 12px 0; color: #856404; font-size: 13px;"><i class="fas fa-lock"></i> Resources are available to registered users only</p>
+                                    <a href="login.php?redirect=<?php echo urlencode('read_topic.php?id=' . $topic_id); ?>" class="btn btn-primary" style="display: inline-block; padding: 6px 12px; font-size: 12px; margin-right: 6px;">
+                                        <i class="fas fa-sign-in-alt"></i> Login
+                                    </a>
+                                    <a href="register.php" class="btn btn-secondary" style="display: inline-block; padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-user-plus"></i> Register
+                                    </a>
+                                </div>
+                            <?php else: ?>
+                                <p style="font-size: 14px; color: var(--gray-600); margin-bottom: 16px;">Download these resources to enhance your learning.</p>
+                                
+                                <div class="resources-list">
+                                    <?php foreach ($resources as $resource): ?>
+                                        <div class="resource-item">
+                                            <div class="resource-header">
+                                                <div class="resource-title">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                    <?php echo htmlspecialchars($resource['title']); ?>
+                                                </div>
+                                                <a href="<?php echo htmlspecialchars($resource['file_path']); ?>" 
+                                                   download 
+                                                   class="resource-download">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
                                             </div>
-                                            <a href="<?php echo htmlspecialchars($resource['file_path']); ?>" 
-                                               download 
-                                               class="resource-download">
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                        </div>
-                                        <?php if (!empty($resource['description'])): ?>
-                                            <div class="resource-description">
-                                                <?php echo htmlspecialchars($resource['description']); ?>
+                                            <?php if (!empty($resource['description'])): ?>
+                                                <div class="resource-description">
+                                                    <?php echo htmlspecialchars($resource['description']); ?>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="resource-meta">
+                                                <?php if (!empty($resource['file_size'])): ?>
+                                                    <span>Size: <?php echo round($resource['file_size'] / 1024 / 1024, 2); ?> MB</span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($resource['file_type'])): ?>
+                                                    <span>Type: <?php echo htmlspecialchars($resource['file_type']); ?></span>
+                                                <?php endif; ?>
                                             </div>
-                                        <?php endif; ?>
-                                        <div class="resource-meta">
-                                            <?php if (!empty($resource['file_size'])): ?>
-                                                <span>Size: <?php echo round($resource['file_size'] / 1024 / 1024, 2); ?> MB</span>
-                                            <?php endif; ?>
-                                            <?php if (!empty($resource['file_type'])): ?>
-                                                <span>Type: <?php echo htmlspecialchars($resource['file_type']); ?></span>
-                                            <?php endif; ?>
                                         </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
 

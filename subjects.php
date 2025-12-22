@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/includes/functions.php';
 
 // Ensure we have a class_id to show subjects for
@@ -6,6 +7,8 @@ if (!isset($_GET['class_id'])) {
     header('Location: classes.php');
     exit;
 }
+
+$is_logged_in = is_user_logged_in();
 
 $class_id = (int) $_GET['class_id'];
 $class = cned_get_class($class_id);
@@ -578,7 +581,9 @@ include __DIR__ . '/includes/header.php';
                 <a href="curriculum.php" class="active"><i class="fas fa-book"></i> Curriculum</a>
                 <a href="university.php"><i class="fas fa-university"></i> University</a>
                 <a href="explore.php"><i class="fas fa-search"></i> Explore</a>
-                <a href="#"><i class="fas fa-user"></i> Account</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="dashboard.php"><i class="fas fa-user-circle"></i> Account</a>
+                <?php endif; ?>
             </div>
             <div class="nav-actions">
                 <a href="search.php" class="btn btn-primary btn-sm">

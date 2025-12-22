@@ -1,9 +1,12 @@
 <?php
+session_start();
 require_once __DIR__ . '/includes/functions.php';
 
 // Initialize filter variables
 $filter_class = isset($_GET['class_id']) ? (int)$_GET['class_id'] : 0;
 $filter_subject = isset($_GET['subject_id']) ? (int)$_GET['subject_id'] : 0;
+
+$is_logged_in = is_user_logged_in();
 
 // Get all classes for both levels
 $all_classes = [];
@@ -807,7 +810,9 @@ if (!$topics) {
                 <a href="curriculum.php"><i class="fas fa-book"></i> Curriculum</a>
                 <a href="courses.php"><i class="fas fa-university"></i> University</a>
                 <a href="#" class="active"><i class="fas fa-search"></i> Explore</a>
-                <a href="#"><i class="fas fa-user"></i> Account</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="dashboard.php"><i class="fas fa-user-circle"></i> Account</a>
+                <?php endif; ?>
             </div>
             <div class="nav-actions">
                 <a href="search.php" class="btn btn-primary btn-sm">

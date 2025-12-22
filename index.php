@@ -1,3 +1,8 @@
+<?php
+session_start();
+require_once __DIR__ . '/includes/functions.php';
+$is_logged_in = is_user_logged_in();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -952,25 +957,29 @@
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="#" class="nav-logo">
+            <a href="index.php" class="nav-logo">
                 <i class="fas fa-graduation-cap"></i>
                 <span>CnEduc</span>
             </a>
             <div class="nav-links">
-                <a href="#" class="active"><i class="fas fa-home"></i> Home</a>
+                <a href="index.php" class="active"><i class="fas fa-home"></i> Home</a>
                 <a href="curriculum.php"><i class="fas fa-book"></i> Curriculum</a>
                 <a href="university.php"><i class="fas fa-university"></i> University</a>
                 <a href="explore.php"><i class="fas fa-search"></i> Explore</a>
-                <a href="#"><i class="fas fa-user"></i> Account</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="dashboard.php"><i class="fas fa-user-circle"></i> Account</a>
+                <?php endif; ?>
             </div>
             <div class="nav-actions">
-                <div class="notification-bell">
-                    <i class="fas fa-bell"></i>
-                    <div class="notification-count">3</div>
-                </div>
-                <a href="#" class="btn btn-primary btn-sm">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </a>
+                <?php if ($is_logged_in): ?>
+                    <a href="logout.php" class="btn btn-secondary btn-sm" style="background-color: #ff6b6b; color: white; border-color: #ff6b6b;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                <?php else: ?>
+                    <a href="login.php" class="btn btn-primary btn-sm">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </nav>
@@ -982,10 +991,16 @@
                 <h1>Empowering Education in Uganda</h1>
                 <p>Your complete companion for Primary, Secondary, and University learning with premium resources.</p>
                 <div class="hero-buttons">
-                    <a href="#" class="btn btn-primary">
-                        <i class="fas fa-play-circle"></i> Get Started
-                    </a>
-                    <a href="#" class="btn btn-secondary">
+                    <?php if ($is_logged_in): ?>
+                        <a href="dashboard.php" class="btn btn-primary">
+                            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                        </a>
+                    <?php else: ?>
+                        <a href="register.php" class="btn btn-primary">
+                            <i class="fas fa-play-circle"></i> Get Started
+                        </a>
+                    <?php endif; ?>
+                    <a href="curriculum.php" class="btn btn-secondary">
                         <i class="fas fa-book-open"></i> Browse Courses
                     </a>
                 </div>
@@ -1033,7 +1048,7 @@
                                             <span>12/18 Lessons</span>
                                         </div>
                                     </div>
-                                    <a href="#" class="btn btn-primary btn-sm">Continue Learning</a>
+                                    <a href="courses.php" class="btn btn-primary btn-sm">View Course</a>
                                 </div>
                             </div>
                             <div class="carousel-item">
@@ -1049,7 +1064,7 @@
                                             <span>6/20 Lessons</span>
                                         </div>
                                     </div>
-                                    <a href="#" class="btn btn-primary btn-sm">Continue Learning</a>
+                                    <a href="courses.php" class="btn btn-primary btn-sm">View Course</a>
                                 </div>
                             </div>
                         </div>
@@ -1074,7 +1089,7 @@
                                 <li><a href="classes.php?level_id=1"><i class="fas fa-list"></i> Browse Primary Classes</a></li>
                                 <li><a href="subjects.php?class_id=1"><i class="fas fa-book"></i> P1 Subjects</a></li>
                                 <li><a href="subjects.php?class_id=2"><i class="fas fa-book"></i> P2 Subjects</a></li>
-                                <li><a href="#"><i class="fas fa-download"></i> Download Resources</a></li>
+                                <li><a href="resources.php"><i class="fas fa-download"></i> Download Resources</a></li>
                             </ul>
                         </div>
 
@@ -1086,7 +1101,7 @@
                                 <li><a href="classes.php?level_id=2"><i class="fas fa-list"></i> Browse Secondary Classes</a></li>
                                 <li><a href="subjects.php?class_id=8"><i class="fas fa-book"></i> S1 Subjects</a></li>
                                 <li><a href="subjects.php?class_id=9"><i class="fas fa-book"></i> S2 Subjects</a></li>
-                                <li><a href="#"><i class="fas fa-file-alt"></i> Past Papers</a></li>
+                                <li><a href="exams.php"><i class="fas fa-file-alt"></i> Exam Materials</a></li>
                             </ul>
                         </div>
                     </div>
@@ -1103,7 +1118,6 @@
                             <p>Learn programming, algorithms, data structures, and software development with hands-on projects.</p>
                             <div style="margin-top: 20px;">
                                 <a href="units.php?course_id=1" class="btn btn-primary btn-sm">View Units</a>
-                                <a href="#" class="btn btn-secondary btn-sm" style="margin-left: 10px;">Syllabus</a>
                             </div>
                         </div>
                         <div class="simple-card fade-in delay-1">
@@ -1111,7 +1125,6 @@
                             <p>Management, marketing, finance, and entrepreneurship courses with case studies.</p>
                             <div style="margin-top: 20px;">
                                 <a href="units.php?course_id=2" class="btn btn-primary btn-sm">View Units</a>
-                                <a href="#" class="btn btn-secondary btn-sm" style="margin-left: 10px;">Syllabus</a>
                             </div>
                         </div>
                     </div>
@@ -1152,7 +1165,7 @@
                                 </div>
                             </div>
                             <div style="margin-top: 20px;">
-                                <a href="#" class="btn btn-primary btn-sm">View All Achievements</a>
+                                <a href="certificate.php" class="btn btn-primary btn-sm">View Achievements</a>
                             </div>
                         </div>
                     </div>
@@ -1299,15 +1312,6 @@
                             <div class="stat-label">Active Students</div>
                         </div>
                     </div>
-                </div>
-
-                <div class="card fade-in delay-2">
-                    <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
-                    <ul class="clean-list">
-                        <li><a href="#"><i class="fas fa-bookmark"></i> New content added to Mathematics</a></li>
-                        <li><a href="#"><i class="fas fa-users"></i> Study group meeting tomorrow</a></li>
-                        <li><a href="#"><i class="fas fa-trophy"></i> You earned a new badge!</a></li>
-                    </ul>
                 </div>
             </aside>
         </div>

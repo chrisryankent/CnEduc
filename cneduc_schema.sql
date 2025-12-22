@@ -361,4 +361,41 @@ CREATE TABLE IF NOT EXISTS `topic_question_answers` (
   INDEX `idx_question_created` (`question_id`, `created_at` DESC)
 );
 
+-- User progress tracking for topics
+CREATE TABLE IF NOT EXISTS `user_topic_completion` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `topic_id` INT NOT NULL,
+  `completed_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`topic_id`) REFERENCES `topics`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `user_topic` (`user_id`, `topic_id`),
+  INDEX `idx_user_completed` (`user_id`, `completed_at` DESC)
+);
+
+-- User progress tracking for units
+CREATE TABLE IF NOT EXISTS `user_unit_completion` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `unit_id` INT NOT NULL,
+  `completed_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `user_unit` (`user_id`, `unit_id`),
+  INDEX `idx_user_completed` (`user_id`, `completed_at` DESC)
+);
+
+-- User achievements and badges
+CREATE TABLE IF NOT EXISTS `user_achievements` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `achievement_slug` VARCHAR(100) NOT NULL,
+  `achievement_name` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `awarded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `user_achievement` (`user_id`, `achievement_slug`),
+  INDEX `idx_user_awarded` (`user_id`, `awarded_at` DESC)
+);
+
 -- End of file

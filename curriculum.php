@@ -1,5 +1,8 @@
 <?php
+session_start();
 require_once __DIR__ . '/includes/functions.php';
+
+$is_logged_in = is_user_logged_in();
 
 $levels = get_levels();
 if (!is_array($levels)) {
@@ -754,7 +757,9 @@ foreach ($levels as $lvl) {
                 <a href="curriculum.php" class="active"><i class="fas fa-book"></i> Curriculum</a>
                 <a href="courses.php"><i class="fas fa-university"></i> University</a>
                 <a href="explore.php"><i class="fas fa-search"></i> Explore</a>
-                <a href="#"><i class="fas fa-user"></i> Account</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="dashboard.php"><i class="fas fa-user-circle"></i> Account</a>
+                <?php endif; ?>
             </div>
             <div class="nav-actions">
                 <a href="search.php" class="btn btn-primary btn-sm">
